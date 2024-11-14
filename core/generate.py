@@ -53,7 +53,7 @@ class SQLFileGenerator():
         data = self.read_data()  # Assuming _read_data is in the same class
         with open(self.output_file_name, 'w', encoding='utf-8') as f:
             # Write header comments
-            f.write("-- SQL Insert Statements\n")
+            f.write("-- SQL Insert Statement\n")
             f.write(f"-- Generated for table: {self.table}\n")
             f.write("-- This is a single INSERT statement for all rows\n\n")
             f.write("---------------------------------------------------------------------------------------------------------------------------\n\n")
