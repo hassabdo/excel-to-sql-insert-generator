@@ -28,8 +28,8 @@ class SQLFileGenerator():
         with open(self.schema_file, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        create_table_pattern = r'CREATE TABLE `(\w+)` \((.*?)\);'
-        foreign_key_pattern = r'FOREIGN KEY \(`(\w+)`\) REFERENCES `(\w+)`'
+        create_table_pattern = r'CREATE TABLE "public"\."(\w+)" \((.*?)\);'
+        foreign_key_pattern = r'FOREIGN KEY \("(\w+)"\) REFERENCES "(\w+)"'
 
         dependencies = {}
         for match in re.finditer(create_table_pattern, content, re.S):
@@ -38,7 +38,7 @@ class SQLFileGenerator():
             dependencies[table_name] = []
 
             # Extract column types
-            column_pattern = r'`(\w+)`\s+(\w+)'
+            column_pattern = r'"(\w+)"\s+(\w+)'
             columns = re.findall(column_pattern, columns_block)
             self.schema[table_name] = {col: col_type for col, col_type in columns}
 
@@ -110,6 +110,7 @@ class SQLFileGenerator():
         with open(self.output_file, 'w', encoding='utf-8') as f:
             # Write CREATE TABLE statements without constraints
             for table in sorted_tables:
+                print(Fore.GREEN + f"Inserting data into table {table}..." + Fore.RESET)
                 f.write(f"\n-----------------------------------------------------\n")
                 f.write(f"--- Inserting data into table {table} ---\n")
                 f.write(f"-----------------------------------------------------\n\n")
@@ -127,7 +128,7 @@ class SQLFileGenerator():
                     ]
                     values_list.append(f"\n({', '.join(values)})")
 
-                insert_statement = f"INSERT INTO `{table}` ({', '.join([f'`{col}`' for col in columns])}) VALUES {', '.join(values_list)};\n"
+                insert_statement = f"INSERT INTO \"public\".\"{table}\" ({', '.join([f'{col}' for col in columns])}) VALUES {', '.join(values_list)};\n"
                 f.write(insert_statement)
                 f.write(f"\n---------------------------------------------------\n")
 
