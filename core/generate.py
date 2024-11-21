@@ -28,7 +28,7 @@ class SQLFileGenerator():
         with open(self.schema_file, 'r', encoding='utf-8') as f:
             content = f.read()
 
-        create_table_pattern = r'CREATE TABLE "public"\."(\w+)" \((.*?)\);'
+        create_table_pattern = r'CREATE TABLE "(\w+)" \((.*?)\);'
         foreign_key_pattern = r'FOREIGN KEY \("(\w+)"\) REFERENCES "(\w+)"'
 
         dependencies = {}
@@ -61,13 +61,17 @@ class SQLFileGenerator():
             return "NULL"
         value = row[col]
         col_type = col_types[col]
+        if col_type.lower() == 'boolean':
+            return 'false' if value == 0 else 'true'
         if pd.isnull(value):
             return "NULL"
         if col_type.lower() in ["integer", "bigint", "smallint", "tinyint"]:
             return str(int(value))
-        if col_type.lower() in ["float", "double", "decimal"]:
+        if col_type.lower() in ["float", "double", "decimal", "real"]:
             return str(float(value))
         if col_type.lower() in ["datetime", "timestamp"]:
+            return f"'{pd.to_datetime(value).strftime('%Y-%m-%d %H:%M:%S')}'"
+        if col_type.lower() in ["date"]:
             return f"'{pd.to_datetime(value).strftime('%Y-%m-%d %H:%M:%S')}'"
         # Default to string type for other cases
         return "'" + str(value).replace("'", "''") + "'"
@@ -128,7 +132,7 @@ class SQLFileGenerator():
                     ]
                     values_list.append(f"\n({', '.join(values)})")
 
-                insert_statement = f"INSERT INTO \"public\".\"{table}\" ({', '.join([f'{col}' for col in columns])}) VALUES {', '.join(values_list)};\n"
+                insert_statement = f"INSERT INTO \"{table}\" ({', '.join([f'{col}' for col in columns])}) VALUES {', '.join(values_list)};\n"
                 f.write(insert_statement)
                 f.write(f"\n---------------------------------------------------\n")
 
